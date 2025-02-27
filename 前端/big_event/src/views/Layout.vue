@@ -14,6 +14,8 @@ import avatar from '@/assets/default.png'
 //获取用户详细信息
 import {userInfoService} from '@/api/user.js'
 import useUserInfoStore from '@/stores/userInfo.js'
+import {useTokenStore} from '@/stores/token.js'
+const tokenStore = useTokenStore()
 const userInfoStore = useUserInfoStore()
 const getUserInfo = async () => {
     let res = await userInfoService()
@@ -25,13 +27,13 @@ const getUserInfo = async () => {
 getUserInfo()
 
 import {useRouter} from 'vue-router'
-// const tokenStore = useTokenStore()
 const router = useRouter()
+import {ElMessageBox, ElMessage} from 'element-plus'
 //条目被点击后，调用的函数
 const handleCommand = (command) => {
     if(command==='logout'){
         ElMessageBox.confirm(
-        '你确认要删除该分类信息吗?',
+        '你确认要退出吗?',
         '温馨提示',
         {
             confirmButtonText: '确认',
@@ -40,11 +42,17 @@ const handleCommand = (command) => {
         }
     )
         .then(async () => {
-            //调用接口
-            let result = await articleCategoryDeleteService(row.id);
+            //退出登录
+            // 清空pinia中存储的token和个人信息
+            tokenStore.removeToken()
+            userInfoStore.removeInfo()
+            // 跳转登录页面
+            router.push('/login')
+
+
             ElMessage({
                 type: 'success',
-                message: '删除成功',
+                message: '退出登录',
             })
             //刷新列表
             articleCategoryList();
@@ -52,7 +60,7 @@ const handleCommand = (command) => {
         .catch(() => {
             ElMessage({
                 type: 'info',
-                message: '用户取消了删除',
+                message: '用户取消了退出登录',
             })
         })
     }else{
@@ -118,6 +126,7 @@ const handleCommand = (command) => {
             <el-header>
                 <div>黑马程序员：<strong>{{userInfoStore.info.username}}</strong></div>
                 <!-- 下拉菜单 -->
+                <!-- command:条目被点击后会触发，在事件函数上可以声明一个参数，接收条目对应的指令 -->
                 <el-dropdown placement="bottom-end" @command="handleCommand">
                     <span class="el-dropdown__box">
                         <!-- 头像 -->
